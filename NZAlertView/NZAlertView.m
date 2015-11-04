@@ -12,7 +12,7 @@
 #import "UIImage+Blur.h"
 #import "UIImage+Screenshot.h"
 
-static BOOL IsPresenting;
+static BOOL IsPresenting = NO;
 
 
 @interface NZAlertView ()
@@ -54,11 +54,16 @@ static BOOL IsPresenting;
                                     options:nil];
         
         CGRect frame = self.view.frame;
-        frame.size.width = CGRectGetWidth([[UIScreen mainScreen] bounds]);
-        self.view.frame = frame;
-        self.view.translatesAutoresizingMaskIntoConstraints = NO;
+        //        frame.size.width = CGRectGetWidth([[UIScreen mainScreen] bounds]);
+        //        self.view.frame = frame;
+        
         
         [self addSubview:self.view];
+        NSDictionary *viewDic = @{@"view":self.view};
+        self.view.translatesAutoresizingMaskIntoConstraints = NO;
+        NSDictionary *metric = @{@"width":@(CGRectGetWidth([[UIScreen mainScreen] bounds]))};
+        [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|[view(==width)]|" options:0 metrics:metric views:viewDic]];
+        [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[view]|" options:0 metrics:nil views:viewDic]];
         
         frame = [[UIScreen mainScreen] bounds];
         self.backgroundView = [[UIImageView alloc] initWithFrame:frame];
@@ -219,26 +224,26 @@ static BOOL IsPresenting;
     CGRect frame = self.frame;
     frame.origin.y = -([self originY] + CGRectGetHeight(self.view.frame));
     self.frame = frame;
-
+    
     if (self.screenBlurLevel > 0) {
         UIImage *screenshot = [UIImage screenshot];
         NSData *imageData = UIImageJPEGRepresentation(screenshot, .0001);
         UIImage *blurredSnapshot = [[UIImage imageWithData:imageData] blurredImage:_screenBlurLevel];
-
+        
         self.backgroundView.image = blurredSnapshot;
     } else {
         self.backgroundView.image = nil;
     }
-
+    
     self.backgroundView.alpha = 0;
     
     self.backgroundBlackView.alpha = 0;
+    UIWindow *keyWindow = [[application delegate] window];
+    NSInteger index = [keyWindow.subviews count];
     
-    NSInteger index = [[application keyWindow].subviews count];
-    
-    [[application keyWindow] insertSubview:self atIndex:index];
-    [[application keyWindow] insertSubview:self.backgroundBlackView atIndex:index];
-    [[application keyWindow] insertSubview:self.backgroundView atIndex:index];
+    [keyWindow insertSubview:self atIndex:index];
+    [keyWindow insertSubview:self.backgroundBlackView atIndex:index];
+    [keyWindow insertSubview:self.backgroundView atIndex:index];
     
     CGRect viewFrame = self.view.frame;
     viewFrame.origin.y = [self originY];
@@ -252,9 +257,14 @@ static BOOL IsPresenting;
             if ([self.delegate respondsToSelector:@selector(didPresentNZAlertView:)]) {
                 [self.delegate didPresentNZAlertView:self];
             }
+            [self performSelector:@selector(hide) withObject:nil afterDelay:_alertDuration];
+        }else {
+            IsPresenting = NO;
         }
-        [self performSelector:@selector(hide) withObject:nil afterDelay:_alertDuration];
+        
     }];
+    
+    
 }
 
 #pragma mark -
@@ -262,22 +272,7 @@ static BOOL IsPresenting;
 
 - (void)adjustLayout
 {
-    CGRect frame;
-
-    CGFloat titleToMessage = CGRectGetMinY(self.lbMessage.frame) - CGRectGetMaxY(self.lbTitle.frame);
-    CGFloat messageToBottom = CGRectGetHeight(self.frame) - CGRectGetMaxY(self.lbMessage.frame);
-    
-    self.lbTitle.frame = [self frameForLabel:self.lbTitle];
-    
-    frame = self.lbMessage.frame;
-    frame.origin.y = CGRectGetMaxY(self.lbTitle.frame) + titleToMessage;
-    self.lbMessage.frame = frame;
-    
-    self.lbMessage.frame = [self frameForLabel:self.lbMessage];
-    
-    frame = self.view.frame;
-    frame.size.height = CGRectGetMaxY(self.lbMessage.frame) + messageToBottom;
-    self.view.frame = frame;
+    [self.view layoutIfNeeded];
 }
 
 - (void)defaultDurationsAndLevels
@@ -330,5 +325,5 @@ static BOOL IsPresenting;
     
     return originY;
 }
- 
+
 @end
