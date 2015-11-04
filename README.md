@@ -3,6 +3,8 @@
 Simple and intuitive alert view. Similar to push notification effect.
 This class uses UIAlertView default methods and protocols.
 
+changelog: iPhone 6 and iPhone 6 Plus support
+
 <p align="center">
   <img src="http://s22.postimg.org/sfgwg4ixd/NZAlert_View.png" alt="NZAlertView" title="NZAlertView" width="461" height="422">
 </p>
@@ -147,7 +149,6 @@ A brief summary of each NZAlertView release can be found on the [wiki](https://g
 ###Orientation
 
 - Support for landscape mode
-- iPhone 6 and iPhone 6 Plus support
 
 ###Design
 
